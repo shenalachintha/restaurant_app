@@ -1,33 +1,38 @@
 import React from 'react'
 import Form from '../../layouts/Form'
 import { Grid } from '@mui/material'
+import { makeStyles } from '@mui/styles'
 import Input from '../../controls/input'
 import Select from '../../controls/select'
-import { useForm } from '../../hooks/useForm'
+import InputAdornment from '@mui/material/InputAdornment';
+
+const useStyles = makeStyles(theme => ({
+    adornmentText:{
+      '& .MuiInputAdornment-root':{
+        color:'#aeba31ff',
+        fontWeight:'bold',
+        fontSize:'1.5rem'
+
+    }
+    },
+}));
 
 
 
-const generateOrderNumber=()=>Math.floor(100000 + Math.random() * 900000);
-  
 
-const getFreshModelObject=()=>({
-"orderMasterId":0,
-"orderNumber":generateOrderNumber(),
-"customerId":'',
-"pMethod":'',
-"deletedOrderItemIds":"",
-"grandTotal":[],
-})
+
 
 const pMethods=[
   {id:'cash', title:'Cash'},
   {id:'card', title:'Card'},
   {id:'upi', title:'UPI'},
 ]
-function OrderForm() {
-  
-  useForm(getFreshModelObject)
-  
+function OrderForm(props) {
+  const {values,
+        handleInputChange,
+        
+}=props;  
+const classes=useStyles();
 
   return (
     <Form>
@@ -39,6 +44,12 @@ function OrderForm() {
                  label="Order Number" 
                
                   value={values.orderNumber}
+                  InputProps={{
+                    startAdornment: <InputAdornment
+                     position="start"
+                      className={classes.adornmentText}
+                     >#</InputAdornment>
+                  }}
                  />
                  <Select
                   name='customer id'
@@ -56,15 +67,19 @@ function OrderForm() {
               <Select
               name='pmethod'
               label='Payment Method'
-              value={values.pMethod}
+              value={values.pMethod}y
+              
               options={pMethods}
               onChange={handleInputChange}
               />
-             <Input
-             name='grand total'
-              label='Grand Total'
-              value={values.grandTotal}
-            
+              <Input
+                disabled
+                name='grand total'
+                label='Grand Total'
+                value={values.grandTotal}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
               />
             </Grid>
         </Grid>
