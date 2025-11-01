@@ -1,4 +1,4 @@
-import React from 'react'
+import React,{useState,useEffect, use} from 'react'
 import Form from '../../layouts/Form'
 import { ButtonGroup, Grid } from '@mui/material'
 import Input from '../../controls/input'
@@ -9,6 +9,8 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import Button from '../../controls/button'
 import ReorderIcon from '@mui/icons-material/Reorder';
+import { CreateAPIEndpoint } from '../../Api'
+import { ENDPIONTS } from '../../Api'
 
 
 
@@ -24,10 +26,22 @@ const pMethods=[
 ]
 function OrderForm(props) {
   const {values,
-        handleInputChange,
-        
+        handleInputChange,       
 }=props;  
+  const [customerList, setCustomerList] = useState([]);
     // const classes=useStyles(); // Removed unused useStyles
+    useEffect(() => {
+        CreateAPIEndpoint(ENDPIONTS.CUSTOMER).fetchAll()
+            .then(res => {
+                let customerList = res.data.map(item => ({
+                    id: item.customerID,
+                    title: item.customerName
+                }));
+                customerList = [{ id: 0, title: 'Select' }].concat(customerList);
+                setCustomerList(customerList);
+            })
+            .catch(err => console.log(err))
+    }, [])
 
   return (
     <Form>
@@ -51,9 +65,7 @@ function OrderForm(props) {
                   label='Customer'
                     onChange={handleInputChange}
                   options={[
-                    {id:'1', title:'Customer 1'},
-                    {id:'2', title:'Customer 2'},
-                    {id:'3', title:'Customer 3'},
+                    ...customerList
                   ]}
                  />
                
