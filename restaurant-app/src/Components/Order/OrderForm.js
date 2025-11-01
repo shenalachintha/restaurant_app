@@ -9,6 +9,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import Button from '../../controls/button'
 import ReorderIcon from '@mui/icons-material/Reorder';
+import OrderFoodItem from './OrderFoodItem'
 import { CreateAPIEndpoint } from '../../Api'
 import { ENDPIONTS } from '../../Api'
 
@@ -114,11 +115,13 @@ function OrderForm(props) {
                 />
               </ButtonGroup>
               <Button
-              size='large'
-              startIcon={<ReorderIcon/>}
+                size='large'
+                startIcon={<ReorderIcon/>}
               >
                 Orders
               </Button>
+              {/* Render OrderFoodItem so its content appears on the page */}
+              <OrderFoodItem />
             </Grid>
         </Grid>
 
