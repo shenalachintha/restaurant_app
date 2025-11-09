@@ -1,20 +1,19 @@
-
+import logo from './logo.svg';
 import './App.css';
-import {Container, Typography} from '@mui/material'
-import Order from './Components/Order/Order';
-
+import { Container, Typography } from "@mui/material";
+import Order from "./Components/Order";
 
 function App() {
   return (
     <Container maxWidth="md">
-      <Typography variant='h2'
+      <Typography
       gutterBottom
-      align='center'
-      >
+      variant="h2"
+      align ="center">
         Restaurant App
       </Typography>
       <Order />
-      </Container>
+    </Container>
   );
 }
 

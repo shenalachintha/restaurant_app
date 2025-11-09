@@ -1,9 +1,9 @@
 import React from 'react'
 import OrderForm from './OrderForm'
-import { useForm } from '../../hooks/useForm';
-import { Grid } from '@material-ui/core';
-import SearchFoodItems from './SearchFoodItems';
-import OrderedFoodItems from './OrderedFoodItems';
+import useForm from '../../hooks/useForm';
+import { Grid } from '@mui/material';
+import SearchFoodItems from './SearchFoodItem';
+import OrderedFoodItems from './OrderFoodItem';
 
 
 const generateOrderNumber = () => Math.floor(100000 + Math.random() * 900000).toString();
