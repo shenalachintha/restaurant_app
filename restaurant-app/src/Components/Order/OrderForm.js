@@ -11,6 +11,7 @@ import { roundTo2DecimalPoint } from "../../utils";
 import Popup from '../../layouts/Popup';
 import OrderList from './OrderList';
 import Notification from "../../layouts/Notification";
+import { Paper, List, ListItem, ListItemText, Typography } from '@mui/material';
 
 const pMethods = [
     { id: 'none', title: 'Select' },
@@ -47,6 +48,8 @@ export default function OrderForm(props) {
 
     const [customerList, setCustomerList] = useState([]);
     const [orderListVisibility, setOrderListVisibility] = useState(false);
+    const [recentOrder, setRecentOrder] = useState(null);
+    const [localOrders, setLocalOrders] = useState([]);
     const [orderId, setOrderId] = useState(0);
     const [notify, setNotify] = useState({ isOpen: false })
 
@@ -54,7 +57,7 @@ export default function OrderForm(props) {
         createAPIEndpoint(ENDPIONTS.CUSTOMER).fetchAll()
             .then(res => {
                 let customerList = res.data.map(item => ({
-                    id: item.customerID,
+                    id: item.customerId,
                     title: item.customerName
                 }));
                 customerList = [{ id: 0, title: 'Select' }].concat(customerList);
@@ -107,6 +110,22 @@ export default function OrderForm(props) {
             if (values.orderMasterId == 0) {
                 createAPIEndpoint(ENDPIONTS.ORDER).create(values)
                     .then(res => {
+                        // keep a deep-cloned snapshot of the created order so resetFormControls
+                        // does not clear the details (values is mutated by resetFormControls)
+                        const snapshot = JSON.parse(JSON.stringify(res.data || values));
+                        // ensure snapshot has customer object for display in OrderList
+                        if (!snapshot.customer) {
+                            const cust = customerList.find(c => c.id === snapshot.customerId);
+                            snapshot.customer = { customerName: cust ? cust.title : '' };
+                        }
+                        // ensure an id exists for list deduping (server should provide one)
+                        if (!snapshot.orderMasterId) snapshot.orderMasterId = Date.now();
+                        console.log('Created order snapshot:', snapshot);
+                        setRecentOrder(snapshot);
+                        // keep a local copy so the Orders list shows immediately
+                        setLocalOrders(prev => [snapshot, ...prev]);
+                        // auto-open Orders so user can immediately see submitted items
+                        setOrderListVisibility(true);
                         resetFormControls();
                         setNotify({isOpen:true, message:'New order is created.'});
                     })
@@ -115,6 +134,22 @@ export default function OrderForm(props) {
             else {
                 createAPIEndpoint(ENDPIONTS.ORDER).update(values.orderMasterId, values)
                     .then(res => {
+                        // store deep-cloned snapshot of updated order
+                        const snapshot = JSON.parse(JSON.stringify(res.data || values));
+                        if (!snapshot.customer) {
+                            const cust = customerList.find(c => c.id === snapshot.customerId);
+                            snapshot.customer = { customerName: cust ? cust.title : '' };
+                        }
+                        if (!snapshot.orderMasterId) snapshot.orderMasterId = Date.now();
+                        console.log('Updated order snapshot:', snapshot);
+                        setRecentOrder(snapshot);
+                        setLocalOrders(prev => {
+                            // replace existing local order with same id or prepend
+                            const without = prev.filter(o => o.orderMasterId !== snapshot.orderMasterId);
+                            return [snapshot, ...without];
+                        });
+                        // auto-open Orders to show updated details
+                        setOrderListVisibility(true);
                         setOrderId(0);
                         setNotify({isOpen:true, message:'The order is updated.'});
                     })
@@ -125,6 +160,12 @@ export default function OrderForm(props) {
     }
 
     const openListOfOrders = () => {
+        // If there's no recentOrder (e.g. server didn't return nested details),
+        // use a snapshot of current values so the popup shows selected items.
+        if (!recentOrder || !recentOrder.orderDetails || recentOrder.orderDetails.length === 0) {
+            const snapshot = JSON.parse(JSON.stringify(values));
+            setRecentOrder(snapshot);
+        }
         setOrderListVisibility(true);
     }
 
@@ -192,12 +233,32 @@ export default function OrderForm(props) {
                     </Grid>
                 </Grid>
             </Form>
+            {/* Local submitted orders (client-side) - visible so you can confirm submissions */}
+            {localOrders && localOrders.length > 0 && (
+                <Paper style={{ marginTop: 16, padding: 8 }}>
+                    <Typography variant="subtitle1">Local submitted orders</Typography>
+                    <List>
+                        {localOrders.map((o, i) => (
+                            <ListItem key={i}>
+                                <ListItemText
+                                    primary={o.orderNumber || ('#' + o.orderMasterId)}
+                                    secondary={o.customer && o.customer.customerName ? o.customer.customerName : (o.customerName || '')}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Paper>
+            )}
             <Popup
                 title="List of Orders"
                 openPopup={orderListVisibility}
                 setOpenPopup={setOrderListVisibility}>
                 <OrderList
-                    {...{ setOrderId, setOrderListVisibility,resetFormControls,setNotify }} />
+                    {...{ setOrderId, setOrderListVisibility, resetFormControls, setNotify }}
+                    recentOrder={recentOrder}
+                    customerList={customerList}
+                    localOrders={localOrders}
+                    open={orderListVisibility} />
             </Popup>
             <Notification
                 {...{ notify, setNotify }} />

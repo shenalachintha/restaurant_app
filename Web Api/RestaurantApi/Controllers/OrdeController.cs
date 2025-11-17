@@ -9,7 +9,8 @@ using RestaurantApi.Models;
 
 namespace RestaurantApi.Controllers
 {
-    [Route("api/[controller]")]
+    // Explicit route to match frontend expectation: /api/Order
+    [Route("api/Order")]
     [ApiController]
     public class OrdeController : ControllerBase
     {
